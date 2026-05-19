@@ -39,6 +39,14 @@ const useAuthStore = create((set, get) => ({
           }
         } catch (serverErr) {
           console.log('Failed to refresh user profile from server:', serverErr.message);
+          // If token is explicitly rejected (e.g., changed secrets, expired), clear session
+          if (serverErr.response?.status === 401 || serverErr.message.includes('401')) {
+            console.log('Token rejected by server. Clearing local session.');
+            await AsyncStorage.removeItem('nexo_token');
+            await AsyncStorage.removeItem('nexo_user');
+            setAuthHeader(null);
+            set({ user: null, token: null, isAuthenticated: false });
+          }
         }
       }
     } catch (e) {

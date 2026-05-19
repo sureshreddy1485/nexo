@@ -382,9 +382,21 @@ const getFriends = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, friends: sanitizedFriends });
 });
 
+// @desc  Update push token for Expo Notifications
+// @route PUT /api/users/push-token
+// @access Private
+const updatePushToken = asyncHandler(async (req, res) => {
+  const { pushToken } = req.body;
+  const user = await User.findById(req.user._id);
+  if (!user) { res.status(404); throw new Error('User not found'); }
+  user.pushToken = pushToken || '';
+  await user.save();
+  res.status(200).json({ success: true, message: 'Push token updated' });
+});
+
 module.exports = {
   searchUsers, getUserProfile, updateProfile, sendFriendRequest,
   acceptFriendRequest, declineFriendRequest, blockUser, unblockUser,
   getFriendRequests, updateCameraStatus, deactivateAccount, deleteAccount,
-  removeFriend, getBlockedUsers, getFriends,
+  removeFriend, getBlockedUsers, getFriends, updatePushToken,
 };

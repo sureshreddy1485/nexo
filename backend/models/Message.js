@@ -34,6 +34,7 @@ const messageSchema = new mongoose.Schema(
     deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     // Self-destruct
     isSelfDestructing: { type: Boolean, default: false },
+    destructAfterSeconds: { type: Number, default: 5 },
     expiresAt: { type: Date, default: null },
     // E2E encrypted secret chat
     isEncrypted: { type: Boolean, default: false },

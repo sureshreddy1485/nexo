@@ -139,7 +139,7 @@ export default function ChatRoomScreen({ route, navigation }) {
   const [gifError, setGifError] = useState('');
 
   useEffect(() => {
-    if (fullScreenMedia && fullScreenMedia.isSelfDestructing) {
+    if (fullScreenMedia && fullScreenMedia.isSelfDestructing && !fullScreenMedia.isMine) {
       setMediaCountdownSeconds(fullScreenMedia.destructAfterSeconds);
     } else {
       setMediaCountdownSeconds(null);

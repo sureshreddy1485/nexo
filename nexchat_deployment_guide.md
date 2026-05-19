@@ -32,7 +32,7 @@ git push -u origin main
 2. Click **New → Web Service**
 3. Connect your GitHub → select `nexo-backend`
 4. Settings:
-   - **Name**: `nexo-api` (your URL will be `https://nexo-api.onrender.com`)
+   - **Name**: `nexchat-new` (your URL will be `https://nexchat-new.onrender.com`)
    - **Runtime**: Node
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
@@ -44,7 +44,7 @@ git push -u origin main
 | `NODE_ENV` | `production` |
 | `MONGO_URI` | `mongodb://sureshreddymallidi45_db_user:PrXaYP62FFtkIdhz@ac-gbesgjg-shard-00-00.p7yhvjw.mongodb.net:27017,ac-gbesgjg-shard-00-01.p7yhvjw.mongodb.net:27017,ac-gbesgjg-shard-00-02.p7yhvjw.mongodb.net:27017/nexo?ssl=true&replicaSet=atlas-3uy115-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0` |
 | `JWT_SECRET` | `chattrix_super_secret_jwt_key_replace_this_in_production_32chars` |
-| `JWT_EXPIRES_IN` | `30d` |
+| `JWT_EXPIRES_IN` | `365d` |
 | `SECURITY_KEY_SECRET` | `a3f8e2c1d4b7a9f0e1c2d3b4a5f6e7d8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4` |
 | `CLOUDINARY_CLOUD_NAME` | `dz3m8nxj3` |
 | `CLOUDINARY_API_KEY` | `339391243631687` |
@@ -52,7 +52,7 @@ git push -u origin main
 | `CLIENT_URL` | `*` |
 
 6. Click **Deploy**. Wait ~2 minutes.
-7. Test: open `https://nexo-api.onrender.com/health` — should return `{"status":"OK","app":"Nexo API"}`
+7. Test: open `https://nexchat-new.onrender.com/health` — should return `{"status":"OK","app":"Nexo API"}`
 
 > ⚠️ **Free tier sleeps after 15 min of inactivity** (first request after sleep takes ~30s).  
 > Upgrade to **$7/mo Starter** for always-on if you want instant response for users.
@@ -100,8 +100,8 @@ For Play Store release use: `eas build -p android --profile production`
 
 | Component | Service | URL |
 |-----------|---------|-----|
-| Backend API | Render | `https://nexo-api.onrender.com/api` |
-| Realtime Socket | Render | `https://nexo-api.onrender.com` |
+| Backend API | Render | `https://nexchat-new.onrender.com/api` |
+| Realtime Socket | Render | `https://nexchat-new.onrender.com` |
 | Database | MongoDB Atlas | Cloud-hosted |
 | Media Storage | Cloudinary | Cloud-hosted |
 | App | Expo EAS Build | `.apk` file |

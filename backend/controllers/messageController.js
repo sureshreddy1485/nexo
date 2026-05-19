@@ -4,6 +4,9 @@ const Chat = require('../models/Chat');
 const User = require('../models/User');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinaryUpload');
 const { sanitizeUser, sanitizeMessagesReadReceipts } = require('../utils/privacyHelper');
+const { Expo } = require('expo-server-sdk');
+
+let expo = new Expo();
 
 const populateMessage = (query) =>
   query
@@ -12,7 +15,7 @@ const populateMessage = (query) =>
     .populate('reactions.user', 'username displayName profilePicture')
     .populate({
       path: 'chat',
-      populate: { path: 'users', select: 'username displayName profilePicture isOnline privacy friends' },
+      populate: { path: 'users', select: 'username displayName profilePicture isOnline privacy friends pushToken' },
     });
 
 // @desc  Send a message
@@ -83,13 +86,15 @@ const sendMessage = asyncHandler(async (req, res) => {
     isEncrypted: isEncrypted || false,
     encryptedContent: encryptedContent || '',
     isLive: isLive === 'true' || isLive === true || false,
+    destructAfterSeconds: parseInt(req.body.destructAfterSeconds) || 5,
   };
 
   if (chat.disappearAfter > 0) {
+    // For entire chat disappearing messages, set expiresAt immediately
     msgData.expiresAt = new Date(Date.now() + chat.disappearAfter * 1000);
-  } else if (isSelfDestructing && destructAfterSeconds) {
-    msgData.expiresAt = new Date(Date.now() + parseInt(destructAfterSeconds) * 1000);
   }
+  // We intentionally do NOT set msgData.expiresAt for media disappearing messages (isSelfDestructing).
+  // The frontend handles the media countdown and calls /destruct API when viewed.
 
   let message = await Message.create(msgData);
   message = await populateMessage(Message.findById(message._id));
@@ -99,6 +104,8 @@ const sendMessage = asyncHandler(async (req, res) => {
 
   // Emit via socket to all participants' personal rooms
   const io = req.app.get('io');
+  let pushMessages = [];
+  
   if (io) {
     chat.users.forEach((userId) => {
       const userSpecificMessage = message.toObject();
@@ -109,7 +116,38 @@ const sendMessage = asyncHandler(async (req, res) => {
         userSpecificMessage.chat.users = userSpecificMessage.chat.users.map(u => sanitizeUser(u, userId));
       }
       io.to(userId.toString()).emit('new_message', userSpecificMessage);
+
+      // Prepare Push Notifications for recipients
+      if (userId.toString() !== req.user._id.toString()) {
+        const targetUser = userSpecificMessage.chat?.users?.find(u => (u._id || u).toString() === userId.toString());
+        if (targetUser && targetUser.pushToken && Expo.isExpoPushToken(targetUser.pushToken)) {
+          let pushBody = content || `Sent a ${messageType}`;
+          if (isEncrypted) pushBody = '🔒 Encrypted Message';
+          
+          pushMessages.push({
+            to: targetUser.pushToken,
+            sound: 'default',
+            title: chat.isGroupChat ? chat.groupName : (req.user.displayName || req.user.username),
+            body: pushBody,
+            data: { chatId: chat._id },
+          });
+        }
+      }
     });
+  }
+
+  // Send push notifications asynchronously
+  if (pushMessages.length > 0) {
+    let chunks = expo.chunkPushNotifications(pushMessages);
+    (async () => {
+      for (let chunk of chunks) {
+        try {
+          await expo.sendPushNotificationsAsync(chunk);
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    })();
   }
 
   const resMessage = message.toObject();

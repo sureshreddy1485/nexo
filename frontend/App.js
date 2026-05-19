@@ -22,21 +22,15 @@ export default function App() {
 
   useEffect(() => {
     hydrate();
-
-    // Request permissions for push notifications
-    async function requestPermissions() {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        console.log('Failed to get push token for push notification!');
-      }
-    }
-    requestPermissions();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      import('./src/services/pushNotifications').then(({ registerForPushNotificationsAsync }) => {
+        registerForPushNotificationsAsync();
+      });
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated && user) {
