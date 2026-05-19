@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../services/api';
+import api, { uploadApi, setAuthHeader } from '../services/api';
 
 const useAuthStore = create((set, get) => ({
   user: null,
@@ -12,12 +12,34 @@ const useAuthStore = create((set, get) => ({
   // Hydrate from storage on app start
   hydrate: async () => {
     try {
-      const token = await AsyncStorage.getItem('nexchat_token');
-      const userStr = await AsyncStorage.getItem('nexchat_user');
+      let token = await AsyncStorage.getItem('nexo_token');
+      let userStr = await AsyncStorage.getItem('nexo_user');
+      
+      // Backward compatibility for app rename
+      if (!token || !userStr) {
+        token = await AsyncStorage.getItem('nexchat_token');
+        userStr = await AsyncStorage.getItem('nexchat_user');
+        if (token && userStr) {
+          await AsyncStorage.setItem('nexo_token', token);
+          await AsyncStorage.setItem('nexo_user', userStr);
+        }
+      }
+
       if (token && userStr) {
         const user = JSON.parse(userStr);
         set({ token, user, isAuthenticated: true });
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setAuthHeader(token);
+
+        // Fetch fresh user data from server in the background
+        try {
+          const { data } = await api.get('/auth/me');
+          if (data.user) {
+            set({ user: data.user });
+            await AsyncStorage.setItem('nexo_user', JSON.stringify(data.user));
+          }
+        } catch (serverErr) {
+          console.log('Failed to refresh user profile from server:', serverErr.message);
+        }
       }
     } catch (e) {
       console.log('Hydrate error:', e);
@@ -27,12 +49,12 @@ const useAuthStore = create((set, get) => ({
   signup: async (formData) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.post('/auth/signup', formData, {
+      const { data } = await uploadApi.post('/auth/signup', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      await AsyncStorage.setItem('nexchat_token', data.token);
-      await AsyncStorage.setItem('nexchat_user', JSON.stringify(data.user));
-      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+      await AsyncStorage.setItem('nexo_token', data.token);
+      await AsyncStorage.setItem('nexo_user', JSON.stringify(data.user));
+      setAuthHeader(data.token);
       set({ user: data.user, token: data.token, isAuthenticated: true, isLoading: false });
       return { success: true };
     } catch (err) {
@@ -46,9 +68,9 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data } = await api.post('/auth/login', { identifier, password });
-      await AsyncStorage.setItem('nexchat_token', data.token);
-      await AsyncStorage.setItem('nexchat_user', JSON.stringify(data.user));
-      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+      await AsyncStorage.setItem('nexo_token', data.token);
+      await AsyncStorage.setItem('nexo_user', JSON.stringify(data.user));
+      setAuthHeader(data.token);
       set({ user: data.user, token: data.token, isAuthenticated: true, isLoading: false });
       return { success: true };
     } catch (err) {
@@ -62,16 +84,16 @@ const useAuthStore = create((set, get) => ({
     try {
       await api.post('/auth/logout');
     } catch (_) {}
-    await AsyncStorage.removeItem('nexchat_token');
-    await AsyncStorage.removeItem('nexchat_user');
-    delete api.defaults.headers.common['Authorization'];
+    await AsyncStorage.removeItem('nexo_token');
+    await AsyncStorage.removeItem('nexo_user');
+    setAuthHeader(null);
     set({ user: null, token: null, isAuthenticated: false });
   },
 
   updateUser: (updates) => {
     const updated = { ...get().user, ...updates };
     set({ user: updated });
-    AsyncStorage.setItem('nexchat_user', JSON.stringify(updated));
+    AsyncStorage.setItem('nexo_user', JSON.stringify(updated));
   },
 
   setError: (error) => set({ error }),

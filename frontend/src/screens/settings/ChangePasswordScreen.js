@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  ScrollView, Platform, ActivityIndicator, Alert, StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,10 +50,17 @@ export default function ChangePasswordScreen({ navigation }) {
   ];
 
   return (
-    <LinearGradient colors={['#0A0A0F', '#1A1A2E']} style={{ flex: 1 }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View style={styles.infoBox}>
+    <View style={{ flex: 1, backgroundColor: Colors.dark.bg }}>
+      <StatusBar barStyle="light-content" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Change Password</Text>
+        <View style={{ width: 36 }} />
+      </View>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <View style={styles.infoBox}>
             <Ionicons name="shield-checkmark" size={20} color={Colors.accentGreen} />
             <Text style={styles.infoText}>Your security key is required to change your password. This ensures only you can modify your account.</Text>
           </View>
@@ -85,17 +92,25 @@ export default function ChangePasswordScreen({ navigation }) {
           ))}
 
           <TouchableOpacity onPress={handleChange} disabled={isLoading} style={{ marginTop: 16 }}>
-            <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.changeBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.changeBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.changeBtnText}>Change Password</Text>}
             </LinearGradient>
           </TouchableOpacity>
         </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
-  );
+      </View>
+    );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 8 : 54,
+    paddingBottom: 12,
+    backgroundColor: Colors.dark.card,
+    borderBottomWidth: 1, borderBottomColor: Colors.dark.border,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: Colors.dark.text },
   scroll: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40 },
   infoBox: {
     flexDirection: 'row', gap: 12, backgroundColor: Colors.accentGreen + '15',

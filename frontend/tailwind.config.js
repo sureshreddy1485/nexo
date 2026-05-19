@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // NexChat brand palette
+        // Nexo brand palette
         primary: {
           DEFAULT: '#6C63FF',
           50: '#F0EFFE',

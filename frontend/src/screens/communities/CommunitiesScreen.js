@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Image,
-  TextInput, ActivityIndicator, Alert,
+  TextInput, ActivityIndicator, Alert, StatusBar, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../theme/colors';
 import api from '../../services/api';
+import TabHeader from '../../components/TabHeader';
 
 export default function CommunitiesScreen({ navigation }) {
   const [communities, setCommunities] = useState([]);
   const [search, setSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchCommunities = async () => {
@@ -24,29 +26,43 @@ export default function CommunitiesScreen({ navigation }) {
   };
 
   useEffect(() => {
-    fetchCommunities();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchCommunities();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
 
   const joinCommunity = async (chatId) => {
     try {
-      await api.put(`/chats/group/${chatId}/add`, { userId: null }); // handled by join logic
+      await api.put(`/chats/group/${chatId}/add`, { userId: null });
       Alert.alert('Joined!', 'You joined the community');
+      fetchCommunities(); // refresh list
     } catch (e) {
       Alert.alert('Error', e.message);
     }
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={styles.card} 
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('ChatRoom', { chat: item })}
+    >
       {item.groupPicture ? (
         <Image source={{ uri: item.groupPicture }} style={styles.cardImage} />
       ) : (
-        <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.cardImage}>
+        <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.cardImage}>
           <Text style={styles.cardImageText}>{item.chatName?.charAt(0)}</Text>
         </LinearGradient>
       )}
       <View style={styles.cardContent}>
-        <Text style={styles.cardName}>{item.chatName}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <Text style={styles.cardName}>{item.chatName}</Text>
+          {item.groupUsername ? (
+            <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600' }}>@{item.groupUsername}</Text>
+          ) : null}
+        </View>
         {item.groupDescription ? (
           <Text style={styles.cardDesc} numberOfLines={2}>{item.groupDescription}</Text>
         ) : null}
@@ -56,7 +72,7 @@ export default function CommunitiesScreen({ navigation }) {
         </View>
       </View>
       <TouchableOpacity onPress={() => joinCommunity(item._id)}>
-        <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.joinBtn}>
+        <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.joinBtn}>
           <Text style={styles.joinBtnText}>Join</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -65,17 +81,48 @@ export default function CommunitiesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color={Colors.dark.muted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search communities..."
-          placeholderTextColor={Colors.dark.muted}
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={fetchCommunities}
-        />
-      </View>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.card} />
+
+      <TabHeader 
+        title="Communities" 
+        right={
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <TouchableOpacity onPress={() => navigation.navigate('CreateGroup')} style={{ padding: 4 }}>
+              <Ionicons name="add-circle-outline" size={24} color={Colors.dark.text} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => {
+                if (showSearch) {
+                  setSearch('');
+                }
+                setShowSearch(!showSearch);
+              }} 
+              style={{ padding: 4 }}
+            >
+              <Ionicons name={showSearch ? "close-outline" : "search-outline"} size={24} color={Colors.dark.text} />
+            </TouchableOpacity>
+          </View>
+        }
+      />
+
+      {showSearch && (
+        <View style={styles.searchWrap}>
+          <Ionicons name="search-outline" size={18} color={Colors.dark.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search communities..."
+            placeholderTextColor={Colors.dark.muted}
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={fetchCommunities}
+            autoFocus
+          />
+        </View>
+      )}
+
+      <Text style={{ fontSize: 11, fontWeight: '700', color: Colors.primary, textTransform: 'uppercase', letterSpacing: 1.5, paddingHorizontal: 18, marginTop: 16, marginBottom: 8 }}>
+        {search.trim().length === 0 ? '🔥 Trending & Active' : '🔍 Search Results'}
+      </Text>
 
       {isLoading ? (
         <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />

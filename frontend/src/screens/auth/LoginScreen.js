@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
-  StatusBar, Animated,
+  StatusBar, Animated, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +39,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0A0A0F', '#1A1A2E']} style={styles.container}>
+    <LinearGradient colors={['#080F14', '#04070B']} style={styles.container}>
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -49,9 +49,11 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.logoGrad}>
-              <Ionicons name="chatbubbles" size={32} color="#FFF" />
-            </LinearGradient>
+            <Image 
+              source={require('../../../assets/icon.png')} 
+              style={{ width: 84, height: 84, borderRadius: 24, marginBottom: 16 }} 
+              resizeMode="contain"
+            />
             <Text style={styles.title}>Welcome back</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
           </View>
@@ -105,7 +107,7 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleLogin} disabled={isLoading} activeOpacity={0.85}>
-              <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.loginBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.loginBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 {isLoading ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (

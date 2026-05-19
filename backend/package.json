@@ -1,7 +1,7 @@
 {
-  "name": "nexchat-backend",
+  "name": "nexo-backend",
   "version": "1.0.0",
-  "description": "NexChat Backend API - Realtime Messaging Platform",
+  "description": "Nexo Backend API - Realtime Messaging Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "nexchat",
+    "nexo",
     "messaging",
     "realtime",
     "socket.io"

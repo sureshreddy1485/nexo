@@ -11,6 +11,7 @@ import MessageInfoScreen from '../screens/chat/MessageInfoScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import EditProfileScreen from '../screens/settings/EditProfileScreen';
 import ChangePasswordScreen from '../screens/settings/ChangePasswordScreen';
+import ProfileScreen from '../screens/settings/ProfileScreen';
 import StoriesScreen from '../screens/stories/StoriesScreen';
 import StoryViewerScreen from '../screens/stories/StoryViewerScreen';
 import { Colors } from '../theme/colors';
@@ -30,15 +31,16 @@ export default function MainNavigator() {
     >
       <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ title: 'Group Info' }} />
+      <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ headerShown: false }} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ title: '' }} />
       <Stack.Screen name="NewChat" component={NewChatScreen} options={{ title: 'New Chat' }} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ title: 'New Group' }} />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{ headerShown: false }} />
       <Stack.Screen name="MediaViewer" component={MediaViewerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="MessageInfo" component={MessageInfoScreen} options={{ title: 'Message Info' }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
-      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Stories" component={StoriesScreen} options={{ headerShown: false }} />
       <Stack.Screen name="StoryViewer" component={StoryViewerScreen} options={{ headerShown: false }} />
     </Stack.Navigator>

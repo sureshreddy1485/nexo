@@ -36,6 +36,8 @@ const chatSchema = new mongoose.Schema(
     // Large groups
     maxMembers: { type: Number, default: 200 },
     allowDirectMessages: { type: Boolean, default: true },
+    // Disappearing messages (seconds, 0 = off)
+    disappearAfter: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

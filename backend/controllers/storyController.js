@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Story = require('../models/Story');
 const User = require('../models/User');
 const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
+const { sanitizeUser } = require('../utils/privacyHelper');
 
 // @desc  Create a story
 // @route POST /api/stories
@@ -12,7 +13,15 @@ const createStory = asyncHandler(async (req, res) => {
   const { caption } = req.body;
   const mime = req.file.mimetype;
   const mediaType = mime.startsWith('video/') ? 'video' : 'image';
-  const result = await uploadToCloudinary(req.file.buffer, 'stories', 'auto');
+  
+  let result;
+  try {
+    result = await uploadToCloudinary(req.file.buffer, 'stories', 'auto');
+  } catch (cloudinaryErr) {
+    console.error('Story Media Cloudinary Upload Failed:', cloudinaryErr);
+    res.status(500);
+    throw new Error(`Story Media Upload Failed: ${cloudinaryErr.message || cloudinaryErr}`);
+  }
 
   const story = await Story.create({
     user: req.user._id,
@@ -28,31 +37,85 @@ const createStory = asyncHandler(async (req, res) => {
 // @route GET /api/stories
 // @access Private
 const getStories = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  const friendIds = [...user.friends, req.user._id];
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
 
-  const stories = await Story.find({ user: { $in: friendIds } })
-    .populate('user', 'username displayName profilePicture')
-    .sort({ createdAt: -1 });
+    const Chat = require('../models/Chat');
 
-  // Group by user
-  const grouped = {};
-  for (const story of stories) {
-    const uid = story.user._id.toString();
-    if (!grouped[uid]) grouped[uid] = { user: story.user, stories: [] };
-    grouped[uid].stories.push(story);
+    // Get all users this person has chats with
+    const chats = await Chat.find({ users: req.user._id }).select('users');
+    const chatUserIds = new Set();
+    chats.forEach(chat => {
+      if (chat && chat.users) {
+        chat.users.forEach(u => {
+          if (u) chatUserIds.add(u.toString());
+        });
+      }
+    });
+
+    // Combine friends + chat members + self (deduplicated)
+    const friendIds = (user.friends || []).map(f => (f && f._id ? f._id.toString() : f ? f.toString() : null)).filter(Boolean);
+    const allIds = new Set([
+      ...friendIds,
+      ...chatUserIds,
+      req.user._id.toString(),
+    ]);
+
+    const stories = await Story.find({ user: { $in: [...allIds] } })
+      .populate('user', 'username displayName profilePicture privacy friends')
+      .sort({ createdAt: -1 });
+
+    // Group by user
+    const grouped = {};
+    for (const story of stories) {
+      if (!story.user) continue; // Skip orphaned stories safely
+      
+      const author = story.user;
+      const authorId = author._id.toString();
+      const reqId = req.user._id.toString();
+
+      if (authorId !== reqId) {
+        // Enforce Stories Privacy
+        const storiesVis = author.privacy?.storiesVisibility || 'everyone';
+        if (storiesVis === 'nobody') {
+          continue; // Skip stories entirely
+        }
+        if (storiesVis === 'friends') {
+          const authorFriends = (author.friends || []).map(f => (f && f._id ? f._id.toString() : f ? f.toString() : ''));
+          if (!authorFriends.includes(reqId)) {
+            continue; // Skip stories if not friends
+          }
+        }
+      }
+
+      // Sanitize profile details (e.g. if profilePictureVisibility is 'nobody' or 'friends')
+      const sanitizedAuthor = sanitizeUser(author, req.user._id);
+
+      const uid = authorId;
+      if (!grouped[uid]) grouped[uid] = { user: sanitizedAuthor, stories: [] };
+      grouped[uid].stories.push(story);
+    }
+
+    res.status(200).json({ success: true, stories: Object.values(grouped) });
+  } catch (err) {
+    console.error('Error in getStories:', err);
+    res.status(500).json({ success: false, message: err.message, stack: err.stack });
   }
-
-  res.status(200).json({ success: true, stories: Object.values(grouped) });
 });
 
-// @desc  View a story (add viewer)
-// @route PUT /api/stories/:id/view
-// @access Private
 const viewStory = asyncHandler(async (req, res) => {
-  await Story.findByIdAndUpdate(req.params.id, {
-    $addToSet: { viewers: req.user._id },
-  });
+  const story = await Story.findById(req.params.id);
+  if (!story) { res.status(404); throw new Error('Story not found'); }
+
+  const alreadyViewed = story.viewers.some(v => v.user && v.user.toString() === req.user._id.toString());
+  if (!alreadyViewed) {
+    story.viewers.push({ user: req.user._id, viewedAt: new Date() });
+    await story.save();
+  }
   res.status(200).json({ success: true });
 });
 
@@ -69,4 +132,28 @@ const deleteStory = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Story deleted' });
 });
 
-module.exports = { createStory, getStories, viewStory, deleteStory };
+// @desc  Get viewers of a story
+// @route GET /api/stories/:id/viewers
+// @access Private
+const getStoryViewers = asyncHandler(async (req, res) => {
+  const story = await Story.findById(req.params.id)
+    .populate('viewers.user', 'username displayName profilePicture');
+  if (!story) { res.status(404); throw new Error('Story not found'); }
+  if (story.user.toString() !== req.user._id.toString()) {
+    res.status(403); throw new Error('Only the author can see viewers');
+  }
+
+  const populatedViewers = story.viewers
+    .filter(v => v.user != null)
+    .map(v => ({
+      _id: v.user._id,
+      username: v.user.username,
+      displayName: v.user.displayName,
+      profilePicture: v.user.profilePicture,
+      viewedAt: v.viewedAt,
+    }));
+
+  res.status(200).json({ success: true, viewers: populatedViewers, count: populatedViewers.length });
+});
+
+module.exports = { createStory, getStories, viewStory, deleteStory, getStoryViewers };

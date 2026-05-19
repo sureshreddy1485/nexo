@@ -16,10 +16,23 @@ const fileFilter = (req, file, cb) => {
     'text/plain',
   ];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  let mime = file.mimetype;
+  if (!mime || mime === 'application/octet-stream' || mime === 'image/*') {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (['.jpg', '.jpeg'].includes(ext)) mime = 'image/jpeg';
+    else if (ext === '.png') mime = 'image/png';
+    else if (ext === '.gif') mime = 'image/gif';
+    else if (ext === '.webp') mime = 'image/webp';
+    else if (ext === '.mp4') mime = 'video/mp4';
+    else if (ext === '.pdf') mime = 'application/pdf';
+    else if (['.doc', '.docx'].includes(ext)) mime = 'application/msword';
+    file.mimetype = mime; // Mutate mimetype for downstream handlers
+  }
+
+  if (allowedTypes.includes(mime)) {
     cb(null, true);
   } else {
-    cb(new Error(`File type ${file.mimetype} not allowed`), false);
+    cb(new Error(`File type ${mime || 'unknown'} not allowed`), false);
   }
 };
 

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Image,
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, Platform, StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../../theme/colors';
-import api from '../../services/api';
+import api, { uploadApi } from '../../services/api';
 import useAuthStore from '../../store/useAuthStore';
+import TabHeader from '../../components/TabHeader';
 
 export default function StoriesScreen({ navigation }) {
   const { user } = useAuthStore();
@@ -26,11 +27,17 @@ export default function StoriesScreen({ navigation }) {
     }
   };
 
-  useEffect(() => { fetchStories(); }, []);
+  useEffect(() => {
+    fetchStories();
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchStories();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const addStory = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All, quality: 0.9,
+      mediaTypes: ['images', 'videos'], quality: 0.9,
     });
     if (result.canceled) return;
     setIsUploading(true);
@@ -39,7 +46,7 @@ export default function StoriesScreen({ navigation }) {
       const formData = new FormData();
       const isVideo = file.type === 'video';
       formData.append('media', { uri: file.uri, name: isVideo ? 'story.mp4' : 'story.jpg', type: isVideo ? 'video/mp4' : 'image/jpeg' });
-      await api.post('/stories', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await uploadApi.post('/stories', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       fetchStories();
       Alert.alert('✨', 'Story added!');
     } catch (e) {
@@ -57,7 +64,7 @@ export default function StoriesScreen({ navigation }) {
         onPress={() => navigation.navigate('StoryViewer', { stories: item.stories, user: item.user })}
       >
         <LinearGradient
-          colors={[Colors.primary, Colors.accent]}
+          colors={[Colors.primary, Colors.primaryDark]}
           style={styles.storyRing}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         >
@@ -78,9 +85,7 @@ export default function StoriesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Stories</Text>
-      </View>
+      <TabHeader title="Stories" />
 
       {isLoading ? (
         <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
@@ -90,6 +95,7 @@ export default function StoriesScreen({ navigation }) {
           keyExtractor={(item, i) => item.isAddBtn ? 'add' : item.user._id}
           numColumns={3}
           contentContainerStyle={styles.grid}
+          columnWrapperStyle={styles.columnWrapper}
           renderItem={({ item }) =>
             item.isAddBtn ? (
               <TouchableOpacity style={styles.addStoryBtn} onPress={addStory} disabled={isUploading}>
@@ -97,7 +103,7 @@ export default function StoriesScreen({ navigation }) {
                   <ActivityIndicator color={Colors.primary} />
                 ) : (
                   <>
-                    <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.addIcon}>
+                    <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.addIcon}>
                       <Ionicons name="add" size={28} color="#FFF" />
                     </LinearGradient>
                     <Text style={styles.storyName}>Add Story</Text>
@@ -114,18 +120,14 @@ export default function StoriesScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.dark.bg },
-  header: {
-    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
-    backgroundColor: Colors.dark.card, borderBottomWidth: 1, borderBottomColor: Colors.dark.border,
-  },
-  headerTitle: { fontSize: 24, fontWeight: '900', color: '#FFF' },
   grid: { padding: 12, gap: 8 },
-  storyItem: { flex: 1, alignItems: 'center', margin: 6, maxWidth: '33%' },
+  columnWrapper: { justifyContent: 'flex-start', gap: 10 },
+  storyItem: { alignItems: 'center', margin: 6, width: 80 },
   storyRing: { width: 74, height: 74, borderRadius: 37, alignItems: 'center', justifyContent: 'center', padding: 3 },
   storyAvatar: { width: 68, height: 68, borderRadius: 34 },
   avatarFallback: { backgroundColor: Colors.dark.card, alignItems: 'center', justifyContent: 'center' },
   avatarInitial: { fontSize: 28, fontWeight: '800', color: Colors.primary },
   storyName: { fontSize: 12, color: Colors.dark.textSecondary, marginTop: 6, textAlign: 'center' },
-  addStoryBtn: { flex: 1, alignItems: 'center', margin: 6, maxWidth: '33%' },
+  addStoryBtn: { alignItems: 'center', margin: 6, width: 80 },
   addIcon: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
 });

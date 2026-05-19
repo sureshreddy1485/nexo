@@ -6,7 +6,12 @@ const storySchema = new mongoose.Schema(
     mediaUrl: { type: String, required: true },
     mediaType: { type: String, enum: ['image', 'video'], default: 'image' },
     caption: { type: String, default: '', maxlength: 500 },
-    viewers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    viewers: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        viewedAt: { type: Date, default: Date.now }
+      }
+    ],
     expiresAt: {
       type: Date,
       default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours

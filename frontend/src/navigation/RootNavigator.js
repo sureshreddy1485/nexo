@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import useAuthStore from '../store/useAuthStore';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import InAppNotification from '../components/InAppNotification';
 
 const Stack = createNativeStackNavigator();
 
@@ -13,6 +14,7 @@ export default function RootNavigator() {
   return (
     <NavigationContainer>
       {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      {isAuthenticated && <InAppNotification />}
     </NavigationContainer>
   );
 }

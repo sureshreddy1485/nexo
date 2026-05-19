@@ -4,7 +4,7 @@ const streamifier = require('streamifier');
 const uploadToCloudinary = (buffer, folder, resourceType = 'auto') => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: `nexchat/${folder}`, resource_type: resourceType },
+      { folder: `nexo/${folder}`, resource_type: resourceType },
       (error, result) => {
         if (result) resolve(result);
         else reject(error);

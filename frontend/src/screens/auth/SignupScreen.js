@@ -26,7 +26,7 @@ export default function SignupScreen({ navigation }) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission needed', 'Please allow photo library access.'); return; }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true, aspect: [1, 1], quality: 0.8,
     });
     if (!result.canceled) setAvatar(result.assets[0]);
@@ -38,8 +38,19 @@ export default function SignupScreen({ navigation }) {
     if (!username || !email || !password || !securityKey) {
       Alert.alert('Error', 'All fields are required'); return;
     }
+    if (username.length < 6 || username.length > 16) {
+      Alert.alert('Error', 'Username must be between 6 and 16 characters'); return;
+    }
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please provide a valid email address'); return;
+    }
     if (password !== confirmPassword) { Alert.alert('Error', 'Passwords do not match'); return; }
-    if (password.length < 6) { Alert.alert('Error', 'Password must be at least 6 characters'); return; }
+    if (password.length < 8) { Alert.alert('Error', 'Password must be at least 8 characters'); return; }
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#_]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      Alert.alert('Error', 'Password must contain at least one uppercase letter, one number, and one special character'); return;
+    }
     if (securityKey.length < 6) { Alert.alert('Error', 'Security key must be at least 6 characters'); return; }
 
     const formData = new FormData();
@@ -60,7 +71,7 @@ export default function SignupScreen({ navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0A0A0F', '#1A1A2E']} style={styles.container}>
+    <LinearGradient colors={['#080F14', '#04070B']} style={styles.container}>
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -69,14 +80,14 @@ export default function SignupScreen({ navigation }) {
           </TouchableOpacity>
 
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join the NexChat community</Text>
+          <Text style={styles.subtitle}>Join the Nexo community</Text>
 
           {/* Avatar picker */}
           <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar}>
             {avatar ? (
               <Image source={{ uri: avatar.uri }} style={styles.avatar} />
             ) : (
-              <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.avatar}>
+              <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.avatar}>
                 <Ionicons name="camera" size={28} color="#FFF" />
               </LinearGradient>
             )}
@@ -121,7 +132,7 @@ export default function SignupScreen({ navigation }) {
               <Ionicons name="lock-closed-outline" size={20} color={Colors.dark.muted} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                placeholder="Minimum 6 characters"
+                placeholder="Min 8 chars, 1 Capital, 1 Num, 1 Spec"
                 placeholderTextColor={Colors.dark.muted}
                 value={form.password}
                 onChangeText={v => update('password', v)}
@@ -170,7 +181,7 @@ export default function SignupScreen({ navigation }) {
           </View>
 
           <TouchableOpacity onPress={handleSignup} disabled={isLoading} activeOpacity={0.85} style={{ marginTop: 8 }}>
-            <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.signupBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.signupBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.signupBtnText}>Create Account</Text>}
             </LinearGradient>
           </TouchableOpacity>

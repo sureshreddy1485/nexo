@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "NexChat",
-    "slug": "nexchat",
+    "name": "Nexo",
+    "slug": "nexo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,14 +16,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nexchat.app"
+      "bundleIdentifier": "com.nexo.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0F"
       },
-      "package": "com.nexchat.app",
+      "package": "com.nexo.app",
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
@@ -40,19 +40,19 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow NexChat to access your camera."
+          "cameraPermission": "Allow Nexo to access your camera."
         }
       ],
       [
         "expo-av",
         {
-          "microphonePermission": "Allow NexChat to access your microphone."
+          "microphonePermission": "Allow Nexo to access your microphone."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow NexChat to access your photos."
+          "photosPermission": "Allow Nexo to access your photos."
         }
       ],
       "react-native-video"

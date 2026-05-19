@@ -1,4 +1,4 @@
-# NexChat 🚀
+# Nexo 🚀
 
 A modern, full-stack realtime messaging application inspired by WhatsApp, Telegram, and Kik.
 
@@ -19,7 +19,7 @@ A modern, full-stack realtime messaging application inspired by WhatsApp, Telegr
 ## Project Structure
 
 ```
-nexchat/
+nexo/
 ├── backend/
 │   ├── config/          # DB, Cloudinary, Socket
 │   ├── controllers/     # Auth, User, Chat, Message, Story

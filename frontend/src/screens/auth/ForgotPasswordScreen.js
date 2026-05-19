@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           <Text style={styles.successTitle}>Password Reset!</Text>
           <Text style={styles.successText}>Your password has been successfully changed. You can now sign in.</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.successBtn}>
+            <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.successBtn}>
               <Text style={styles.successBtnText}>Sign In Now</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -74,7 +74,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.logoGrad}>
+            <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.logoGrad}>
               <Ionicons name="shield-checkmark" size={32} color="#FFF" />
             </LinearGradient>
             <Text style={styles.title}>Reset Password</Text>
@@ -164,7 +164,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           </View>
 
           <TouchableOpacity onPress={handleReset} disabled={isLoading} activeOpacity={0.85} style={{ marginTop: 8 }}>
-            <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.resetBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.resetBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               {isLoading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.resetBtnText}>Reset Password</Text>}
             </LinearGradient>
           </TouchableOpacity>

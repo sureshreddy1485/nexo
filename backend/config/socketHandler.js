@@ -3,6 +3,32 @@ const User = require('../models/User');
 // Map: userId -> Set of socketIds (multi-device support)
 const onlineUsers = new Map();
 
+// Helper to broadcast status changes according to privacy settings
+const broadcastStatus = async (userId, eventName, data, socket, io) => {
+  try {
+    const user = await User.findById(userId).select('privacy friends');
+    if (!user) return;
+
+    const lastSeenVis = user.privacy?.lastSeenVisibility || 'everyone';
+    if (lastSeenVis === 'nobody') {
+      return; // Do not broadcast to anyone
+    }
+
+    if (lastSeenVis === 'friends') {
+      const friends = (user.friends || []).map(f => f.toString());
+      friends.forEach(friendId => {
+        io.to(friendId).emit(eventName, data);
+      });
+      return;
+    }
+
+    // Default: everyone
+    socket.broadcast.emit(eventName, data);
+  } catch (err) {
+    console.error('Error broadcasting status:', err);
+  }
+};
+
 const socketHandler = (io) => {
   io.on('connection', (socket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
@@ -17,7 +43,7 @@ const socketHandler = (io) => {
       onlineUsers.get(userId).add(socket.id);
 
       await User.findByIdAndUpdate(userId, { isOnline: true, lastSeen: new Date() });
-      socket.broadcast.emit('user_online', { userId });
+      await broadcastStatus(userId, 'user_online', { userId }, socket, io);
       socket.emit('connected');
     });
 
@@ -40,8 +66,6 @@ const socketHandler = (io) => {
     });
 
     // ─── Message sent from client ────────────────────────────────────
-    // (Server-side emit already handled in REST API)
-    // This handles acknowledgments if needed
     socket.on('message_sent', (message) => {
       socket.to(message.chat._id || message.chat).emit('new_message', message);
     });
@@ -54,7 +78,7 @@ const socketHandler = (io) => {
     // ─── Camera active indicator ─────────────────────────────────────
     socket.on('camera_active', async ({ userId, isActive }) => {
       await User.findByIdAndUpdate(userId, { isCameraActive: isActive });
-      socket.broadcast.emit('camera_status_changed', { userId, isActive });
+      await broadcastStatus(userId, 'camera_status_changed', { userId, isActive }, socket, io);
     });
 
     // ─── User status ─────────────────────────────────────────────────
@@ -91,7 +115,7 @@ const socketHandler = (io) => {
           if (sockets.size === 0) {
             onlineUsers.delete(userId);
             await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date(), isCameraActive: false });
-            socket.broadcast.emit('user_offline', { userId, lastSeen: new Date() });
+            await broadcastStatus(userId, 'user_offline', { userId, lastSeen: new Date() }, socket, io);
           }
         }
       }

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nexchat-backend
+    name: nexo-backend
     env: node
     region: singapore
     plan: free

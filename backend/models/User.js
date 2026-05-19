@@ -9,8 +9,8 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      minlength: [3, 'Username must be at least 3 characters'],
-      maxlength: [30, 'Username cannot exceed 30 characters'],
+      minlength: [6, 'Username must be at least 6 characters'],
+      maxlength: [16, 'Username cannot exceed 16 characters'],
       match: [/^[a-z0-9_]+$/, 'Username can only contain lowercase letters, numbers, and underscores'],
     },
     email: {
@@ -24,7 +24,11 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters'],
+      minlength: [8, 'Password must be at least 8 characters'],
+      match: [
+        /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#_]).{8,}$/,
+        'Password must contain at least one uppercase letter, one number, and one special character'
+      ],
       select: false,
     },
     securityKey: {
@@ -60,6 +64,7 @@ const userSchema = new mongoose.Schema(
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     pinnedChats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }],
     archivedChats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }],
+    mutedChats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }],
     savedMessages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
     // Multi-device support
     devices: [
@@ -86,6 +91,12 @@ const userSchema = new mongoose.Schema(
         enum: ['everyone', 'friends', 'nobody'],
         default: 'everyone',
       },
+      readReceipts: {
+        type: String,
+        enum: ['automatic', 'hide'],
+        default: 'automatic',
+      },
+      allowDMFromGroups: { type: Boolean, default: true },
     },
     theme: { type: String, enum: ['dark', 'light', 'system'], default: 'system' },
     isVerified: { type: Boolean, default: false },

@@ -38,6 +38,7 @@ const messageSchema = new mongoose.Schema(
     // E2E encrypted secret chat
     isEncrypted: { type: Boolean, default: false },
     encryptedContent: { type: String, default: '' },
+    isLive: { type: Boolean, default: false },
     // System messages (e.g., "Alice added Bob")
     isSystemMessage: { type: Boolean, default: false },
     messageType: {

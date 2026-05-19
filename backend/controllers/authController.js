@@ -6,7 +6,7 @@ const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
 
 // Generate JWT
 const generateToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '30d' });
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '365d' });
 
 // @desc  Register user
 // @route POST /api/auth/signup
@@ -81,8 +81,8 @@ const login = asyncHandler(async (req, res) => {
 
   const user = await User.findOne(query).select('+password');
   if (!user) {
-    res.status(401);
-    throw new Error('Invalid credentials');
+    res.status(404);
+    throw new Error('User not found');
   }
 
   const isMatch = await user.matchPassword(password);

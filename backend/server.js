@@ -25,14 +25,16 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.IO
+// Socket.IO — supports WebSocket natively on Render
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || '*',
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
   pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ['polling', 'websocket'],
 });
 
 // Make io accessible in controllers via req.app.get('io')
@@ -75,7 +77,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/stories', storyRoutes);
 
 // Health check
-app.get('/health', (req, res) => res.status(200).json({ status: 'OK', app: 'NexChat API' }));
+app.get('/health', (req, res) => res.status(200).json({ status: 'OK', app: 'Nexo API' }));
 
 // ─── Error Handlers ────────────────────────────────────────────────────────
 app.use(notFound);
@@ -84,7 +86,7 @@ app.use(errorHandler);
 // ─── Start Server ──────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`🚀 NexChat server running on port ${PORT} [${process.env.NODE_ENV}]`);
+  console.log(`🚀 Nexo server running on port ${PORT} [${process.env.NODE_ENV}]`);
 });
 
 module.exports = { app, server };

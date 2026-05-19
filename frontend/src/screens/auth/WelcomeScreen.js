@@ -1,12 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, StatusBar,
+  View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, StatusBar, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../theme/colors';
-
-const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -24,19 +21,21 @@ export default function WelcomeScreen({ navigation }) {
   }, []);
 
   return (
-    <LinearGradient colors={['#0A0A0F', '#1A1A2E', '#0F3460']} style={styles.container}>
+    <LinearGradient colors={['#080F14', '#04070B']} style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Decorative circles */}
-      <View style={[styles.circle, { top: -60, right: -60, backgroundColor: Colors.primary + '30' }]} />
-      <View style={[styles.circle, { bottom: 200, left: -80, backgroundColor: Colors.accent + '20', width: 200, height: 200 }]} />
+      <View style={[styles.circle, { top: -60, right: -60, backgroundColor: Colors.primary + '20' }]} />
+      <View style={[styles.circle, { bottom: 200, left: -80, backgroundColor: Colors.primary + '10', width: 200, height: 200 }]} />
 
       {/* Logo */}
       <Animated.View style={[styles.logoContainer, { opacity: logoAnim, transform: [{ scale: logoAnim }] }]}>
-        <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.logoGradient}>
-          <Ionicons name="chatbubbles" size={52} color="#FFF" />
-        </LinearGradient>
-        <Text style={styles.appName}>NexChat</Text>
+        <Image 
+          source={require('../../../assets/icon.png')} 
+          style={styles.logoImage} 
+          resizeMode="contain"
+        />
+        <Text style={styles.appName}>Nexo</Text>
         <Text style={styles.tagline}>Next-gen messaging platform</Text>
       </Animated.View>
 
@@ -52,7 +51,7 @@ export default function WelcomeScreen({ navigation }) {
       {/* CTA Buttons */}
       <Animated.View style={[styles.buttons, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         <TouchableOpacity onPress={() => navigation.navigate('Signup')} activeOpacity={0.85}>
-          <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.primaryBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+          <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.primaryBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             <Text style={styles.primaryBtnText}>Get Started</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -75,9 +74,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
   circle: { position: 'absolute', width: 250, height: 250, borderRadius: 125 },
   logoContainer: { alignItems: 'center', marginBottom: 48 },
-  logoGradient: {
-    width: 100, height: 100, borderRadius: 32, alignItems: 'center',
-    justifyContent: 'center', marginBottom: 20, elevation: 20,
+  logoImage: {
+    width: 100, height: 100, borderRadius: 32, marginBottom: 20,
     shadowColor: Colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 20,
   },
   appName: { fontSize: 42, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
