@@ -396,10 +396,10 @@ const destructMessage = asyncHandler(async (req, res) => {
 
   const io = req.app.get('io');
   if (io) {
-    io.to(message.chat.toString()).emit('message_deleted', { 
+    // Use a distinct event so clients show "Message disappeared" not "Permanently deleted"
+    io.to(message.chat.toString()).emit('message_disappeared', { 
       messageId: message._id, 
-      chatId: message.chat, 
-      forEveryone: true 
+      chatId: message.chat,
     });
   }
 
