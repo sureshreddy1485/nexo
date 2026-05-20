@@ -13,7 +13,7 @@ router.post('/', protect, upload.single('media'), sendMessage);
 router.get('/:chatId', protect, getMessages);
 router.put('/:chatId/read', protect, markAsRead);
 router.delete('/:id', protect, deleteMessage);
-router.put('/:id/edit', protect, editMessage);
+router.patch('/:id/edit', protect, editMessage);
 router.post('/:id/react', protect, reactToMessage);
 router.post('/:id/forward', protect, forwardMessage);
 router.post('/:id/save', protect, saveMessage);
