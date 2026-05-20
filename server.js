@@ -1,3 +1,4 @@
+// Nexo API v1.1.0 — message editing, disappearing media, expo-video migration
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
