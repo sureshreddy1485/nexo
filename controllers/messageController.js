@@ -406,8 +406,48 @@ const destructMessage = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Media message self-destructed successfully' });
 });
 
+// @desc  Edit message
+// @route PUT /api/messages/:id/edit
+// @access Private
+const editMessage = asyncHandler(async (req, res) => {
+  const { content } = req.body;
+  const message = await Message.findById(req.params.id);
+  if (!message) { res.status(404); throw new Error('Message not found'); }
+  if (message.sender.toString() !== req.user._id.toString()) {
+    res.status(403); throw new Error('Not authorized to edit this message');
+  }
+  if (message.deletedForEveryone) {
+    res.status(400); throw new Error('Cannot edit deleted message');
+  }
+  if (message.mediaUrl || message.messageType !== 'text') {
+    res.status(400); throw new Error('Cannot edit media messages');
+  }
+  
+  const diff = (Date.now() - new Date(message.createdAt).getTime()) / 60000;
+  if (diff > 5) {
+    res.status(400); throw new Error('Messages can only be edited within 5 minutes of sending');
+  }
+
+  message.content = content;
+  message.isEdited = true;
+  await message.save();
+
+  const updated = await populateMessage(Message.findById(message._id));
+  const io = req.app.get('io');
+  if (io) {
+    const chat = await Chat.findById(message.chat);
+    if (chat) {
+      chat.users.forEach((userId) => {
+        io.to(userId.toString()).emit('message_edited', { messageId: message._id, content: updated.content, chatId: message.chat });
+      });
+    }
+  }
+
+  res.status(200).json({ success: true, message: updated });
+});
+
 module.exports = {
   sendMessage, getMessages, markAsRead, deleteMessage,
   reactToMessage, forwardMessage, saveMessage, getSavedMessages,
-  destructMessage,
+  destructMessage, editMessage,
 };
