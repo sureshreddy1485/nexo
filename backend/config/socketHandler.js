@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Chat = require('../models/Chat');
+const Message = require('../models/Message');
 
 // Map: userId -> Set of socketIds (multi-device support)
 const onlineUsers = new Map();
@@ -71,8 +73,26 @@ const socketHandler = (io) => {
     });
 
     // ─── Read receipts ───────────────────────────────────────────────
-    socket.on('mark_read', ({ chatId, userId }) => {
+    socket.on('mark_read', async ({ chatId, userId }) => {
       socket.to(chatId).emit('messages_read', { chatId, userId });
+
+      // Auto-expire bot messages 24 hrs after seen
+      try {
+        const chat = await Chat.findById(chatId).populate('users', 'username');
+        if (!chat || chat.isGroupChat) return;
+        const isBotChat = chat.users.some(u =>
+          u.username === 'mica_bot' || u.username === 'relay_bot' || u.username === 'relay'
+        );
+        if (!isBotChat) return;
+
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // now + 24 hrs
+        await Message.updateMany(
+          { chat: chatId, expiresAt: null, deletedForEveryone: { $ne: true } },
+          { $set: { expiresAt } }
+        );
+      } catch (err) {
+        console.error('Bot-chat auto-expire error:', err);
+      }
     });
 
     // ─── Camera active indicator ─────────────────────────────────────

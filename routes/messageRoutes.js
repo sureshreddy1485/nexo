@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const {
-  sendMessage, getMessages, markAsRead, deleteMessage,
+  sendMessage, getMessages, markAsRead, markAsDelivered, deleteMessage,
   reactToMessage, forwardMessage, saveMessage, getSavedMessages,
-  destructMessage, editMessage,
+  destructMessage, editMessage, voteOnPoll,
 } = require('../controllers/messageController');
 const { protect } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
@@ -18,10 +18,12 @@ router.post('/:id/react', protect, reactToMessage);
 router.post('/:id/forward', protect, forwardMessage);
 router.post('/:id/save', protect, saveMessage);
 router.post('/:id/destruct', protect, destructMessage);
+router.post('/:id/vote', protect, voteOnPoll);
 
 // Wildcard routes last
 router.get('/:chatId', protect, getMessages);
 router.put('/:chatId/read', protect, markAsRead);
+router.put('/:chatId/deliver', protect, markAsDelivered);
 router.delete('/:id', protect, deleteMessage);
 
 module.exports = router;
